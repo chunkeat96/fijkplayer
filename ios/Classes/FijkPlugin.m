@@ -67,6 +67,9 @@ static FijkPlugin *_instance = nil;
     int64_t vid = [[registrar textures] registerTexture:player];
     [player shutdown];
     [[registrar textures] unregisterTexture:vid];
+    
+    // [FlutterPluginRegistry publish:] is mandatory for receiving detachFromEngineForRegistrar.
+    [registrar publish:instance];
 }
 
 + (FijkPlugin *)singleInstance {
@@ -97,6 +100,18 @@ static FijkPlugin *_instance = nil;
                  object:nil];
     }
     return self;
+}
+
+// This method gets called when Flutter engine is about to be deleted/deallocated from the memory.
+// IJKPlayer's internal rendering thread calls textureFrameAvailable.
+// This causes bad memory access & crash to take place if app is closed with a video playing.
+- (void)detachFromEngineForRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+    NSLog(@"detachFromEngineForRegistrar");
+    for(id key in _fijkPlayers) {
+        FijkPlayer* fijkPlayer = [_fijkPlayers objectForKey:key];
+        [fijkPlayer notifyDetachFromEngine];
+        [fijkPlayer shutdown];
+    }
 }
 
 - (void)handleMethodCall:(FlutterMethodCall *)call

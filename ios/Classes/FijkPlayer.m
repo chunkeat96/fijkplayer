@@ -62,6 +62,7 @@ static atomic_int atomicId = 0;
     int _state;
     int _pid;
     int64_t _vid;
+    bool _detachedFromEngine;
 }
 
 static const int idle = 0;
@@ -102,6 +103,7 @@ static int renderType = 0;
         _vid = -1;
         _rotate = -1;
         _state = 0;
+        _detachedFromEngine = false;
 
         _hostOption = [[FijkHostOption alloc] init];
         _lastBuffer = nil;
@@ -154,6 +156,10 @@ static int renderType = 0;
     }
 
     return self;
+}
+
+- (void)notifyDetachFromEngine {
+    _detachedFromEngine = true;
 }
 
 - (void)setup {
@@ -234,7 +240,10 @@ static int renderType = 0;
         CFRelease(old);
     }
     if (_vid >= 0) {
-        [_textureRegistry textureFrameAvailable:_vid];
+        UIApplicationState state = [[UIApplication sharedApplication] applicationState];
+        if (state == UIApplicationStateActive && !_detachedFromEngine && _textureRegistry != nil) {
+            [_textureRegistry textureFrameAvailable:_vid];
+        }
     }
 }
 
