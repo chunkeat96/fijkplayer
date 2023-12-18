@@ -296,8 +296,10 @@ class _FijkViewState extends State<FijkView> {
     var orientation = MediaQuery.of(context).orientation;
     FijkLog.d("start enter fullscreen. orientation:$orientation");
     if (_vWidth >= _vHeight) {
+      if (MediaQuery.of(context).orientation == Orientation.portrait)
         changed = await FijkPlugin.setOrientationLandscape();
     } else {
+      if (MediaQuery.of(context).orientation == Orientation.landscape)
         changed = await FijkPlugin.setOrientationPortrait();
     }
     FijkLog.d("screen orientation changed:$changed");
@@ -308,12 +310,10 @@ class _FijkViewState extends State<FijkView> {
 
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom]);
-    if (changed) {
-      if (_vWidth >= _vHeight) {
-        await FijkPlugin.setOrientationPortrait();
-      } else {
-        await FijkPlugin.setOrientationLandscape();
-      }
+    if (_vWidth >= _vHeight) {
+      await FijkPlugin.setOrientationPortrait();
+    } else {
+      await FijkPlugin.setOrientationLandscape();
     }
   }
 
