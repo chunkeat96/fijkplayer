@@ -35,6 +35,8 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
   StreamSubscription<dynamic>? _nativeEventSubscription;
 
   bool _startAfterSetup = false;
+  bool _mute = false;
+  bool get mute => _mute;
 
   FijkValue _value;
 
@@ -343,6 +345,11 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
       return Future.error(
           ArgumentError.value(volume, "setVolume invalid volume"));
     } else {
+      if (volume == 0) {
+        _mute = true;
+      } else {
+        _mute = false;
+      }
       await _nativeSetup.future;
       FijkLog.i("$this invoke setVolume $volume");
       return _channel
@@ -425,6 +432,10 @@ class FijkPlayer extends ChangeNotifier implements ValueListenable<FijkValue> {
       await _channel.invokeMethod("reset").then((_) {
         FijkLog.i("$this invoke reset #$cid -> done");
       });
+      if (_mute) {
+        await _channel
+            .invokeMethod("setVolume", <String, dynamic>{"volume": 0.0});
+      }
       _setValue(
           FijkValue.uninitialized().copyWith(fullScreen: value.fullScreen));
     }
